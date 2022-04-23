@@ -1,21 +1,23 @@
-name: Push-to-Production
+name: Upload Website
 
-on: push
+on:
+  push:
+    branches:
+    - master
 
 jobs:
   deploy:
-    name: Push to EC2 Instance
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checking the code
-        uses: actions/checkout@v1
+    - name: Checkout
+      uses: actions/checkout@v1
 
-      - name: Deploying to EC2 instance
-        uses: easingthemes/ssh-deploy@v2.1.5
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          SOURCE: "./"
-          REMOTE_HOST: "ec2-52-90-161-110.compute-1.amazonaws.com"
-          REMOTE_USER: "ec2-user"
-          TARGET: "/home/ec2-user/"
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+
+    - name: Deploy static site to S3 bucket
+      run: aws s3 sync ./public/ s3://s3-anmol --delete
